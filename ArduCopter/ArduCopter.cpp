@@ -196,7 +196,42 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #if OSD_ENABLED == ENABLED
     SCHED_TASK(publish_osd_info, 1, 10),
 #endif
+    SCHED_TASK(read_airspeed,          10,    100),
+    SCHED_TASK(airspeed_ratio_update,   1,    100),
 };
+
+/*
+  once a second update the airspeed calibration ratio
+*/
+void Copter::airspeed_ratio_update(void)
+{
+    if (!airspeed.enabled() ||
+        gps.status() < AP_GPS::GPS_OK_FIX_3D ||
+        gps.ground_speed() < 4) {
+        // don't calibrate when not moving
+        return;
+    }
+    if (airspeed.get_airspeed() < aparm.airspeed_min &&
+        gps.ground_speed() < (uint32_t)aparm.airspeed_min) {
+        // don't calibrate when flying below the minimum airspeed. We
+        // check both airspeed and ground speed to catch cases where
+        // the airspeed ratio is way too low, which could lead to it
+        // never coming up again
+        return;
+    }
+    /*
+    if (labs(ahrs.roll_sensor) > roll_limit_cd ||
+        ahrs.pitch_sensor > aparm.pitch_limit_max_cd ||
+        ahrs.pitch_sensor < pitch_limit_min_cd) {
+        // don't calibrate when going beyond normal flight envelope
+        return;
+    }
+    */
+    const Vector3f &vg = gps.velocity();
+    airspeed.update_calibration(vg, aparm.airspeed_max);
+    gcs_send_airspeed_calibration(vg);
+}
+
 
 void Copter::read_aux_all()
 {
@@ -594,5 +629,7 @@ void Copter::publish_osd_info()
     osd.set_nav_info(nav_info);
 }
 #endif
+
+
 
 AP_HAL_MAIN_CALLBACKS(&copter);

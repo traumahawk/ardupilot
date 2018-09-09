@@ -75,6 +75,9 @@ public:
      */
     struct MultiCopter {
         AP_Int16 angle_max;
+        AP_Int16 airspeed_min;
+        AP_Int16 airspeed_max;
+        AP_Int32 airspeed_cruise_cm;
     };
 };
 

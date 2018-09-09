@@ -282,6 +282,11 @@ void Copter::init_ardupilot()
 
     // flag that initialisation has completed
     ap.initialised = true;
+
+    // initialise airspeed sensor
+    airspeed.init();
+    // give AHRS the airspeed sensor
+    ahrs.set_airspeed(&airspeed);
 }
 
 
@@ -299,6 +304,14 @@ void Copter::startup_INS_ground()
 
     // reset ahrs including gyro bias
     ahrs.reset();
+
+    if (airspeed.enabled()) {
+        // initialize airspeed sensor
+        // --------------------------
+        airspeed.calibrate(true);
+    } else {
+        gcs().send_text(MAV_SEVERITY_WARNING,"No airspeed");
+    }
 }
 
 // position_ok - returns true if the horizontal absolute position is ok and home position is set
