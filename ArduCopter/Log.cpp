@@ -20,6 +20,7 @@ struct PACKED log_AutoTune {
     float   new_ddt;        // newly calculated gain
 };
 
+
 // Write an Autotune data packet
 void Copter::ModeAutoTune::Log_Write_AutoTune(uint8_t _axis, uint8_t tune_step, float meas_target, float meas_min, float meas_max, float new_gain_rp, float new_gain_rd, float new_gain_sp, float new_ddt)
 {

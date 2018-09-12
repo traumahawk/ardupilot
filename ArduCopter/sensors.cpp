@@ -133,7 +133,14 @@ void Copter::read_airspeed(void)
     if (airspeed.enabled()) {
         airspeed.read();
         if (should_log(MASK_LOG_IMU)) {
-            DataFlash.Log_Write_Airspeed(airspeed);
+           // DataFlash.Log_Write_Airspeed(airspeed);
+            DataFlash_Class::instance()->Log_Write("ASPD", "TimeUS,Smooth_ASPD,ASPD",
+                                                   "snn", // units: seconds, meters
+                                                   "F00", // mult: 1e-6, 1e-2
+                                                   "Qff", // format: uint64_t, float
+                                                   AP_HAL::micros64(),
+                                                   (double)smoothed_airspeed,
+                                                   (double)airspeed.get_raw_airspeed());
         }
 
         // supply a new temperature to the barometer from the digital
