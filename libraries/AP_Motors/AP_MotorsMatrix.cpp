@@ -73,6 +73,11 @@ void AP_MotorsMatrix::output_to_motors()
 {
     int8_t i;
     int16_t motor_out[AP_MOTORS_MAX_NUM_MOTORS];    // final pwm values sent to the motor
+    uint16_t theta = 0;
+
+    //cutoff angle for transition into plane
+    const int CUTOFF_VAL = 12000;
+
 
     switch (_spool_mode) {
         case SHUT_DOWN: {
@@ -90,12 +95,23 @@ void AP_MotorsMatrix::output_to_motors()
             break;
         }
         case SPIN_WHEN_ARMED:
+
+        //cutting the front two motors for transition EXTREMELY EXPERIMENTAL
+      
             // sends output to motors when armed but not flying
             for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
                 if (motor_enabled[i]) {
                     motor_out[i] = calc_spin_up_to_pwm();
                 }
             }
+
+              theta = hal.rcin->read(8);
+        if (theta>CUTOFF_VAL)
+        {
+            motor_out[0] = false;
+            motor_out[2] = false;
+        }
+
             break;
         case SPOOL_UP:
         case THROTTLE_UNLIMITED:
