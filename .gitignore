@@ -98,4 +98,3 @@ config.mk
 *.apj
 .gdbinit
 /.vscode
-modules/PX4Firmware
