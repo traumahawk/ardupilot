@@ -94,6 +94,24 @@
 #include "AP_Rally.h"           // Rally point library
 #include "AP_Arming.h"
 
+//added from plane.h
+#include <SRV_Channel/SRV_Channel.h>
+#include <AP_AdvancedFailsafe/AP_AdvancedFailsafe.h>
+#include <APM_Control/APM_Control.h>
+#include <APM_Control/AP_AutoTune.h>
+#include <AP_Scheduler/PerfInfo.h>
+#include <AP_Navigation/AP_Navigation.h>
+#include <AP_L1_Control/AP_L1_Control.h>
+#include <AP_RCMapper/AP_RCMapper.h>        // RC input mapping library
+#include <AP_SpdHgtControl/AP_SpdHgtControl.h>
+#include <AP_TECS/AP_TECS.h>
+#include <AP_Soaring/AP_Soaring.h>
+#include <AP_ICEngine/AP_ICEngine.h>
+#include <AP_Landing/AP_Landing.h>
+#include "GCS_Plane.h"
+#include "quadplane.h"
+#include "tuning.h"
+
 // libraries which are dependent on #defines in defines.h and/or config.h
 #if BEACON_ENABLED == ENABLED
  #include <AP_Beacon/AP_Beacon.h>
@@ -217,6 +235,7 @@ private:
     float smoothed_airspeed;
 
     // key aircraft parameters passed to multiple libraries
+    AP_Vehicle::FixedWing aparmfw;
     AP_Vehicle::MultiCopter aparm;
 
     // Global parameters are all contained within the 'g' class.
@@ -240,6 +259,7 @@ private:
 
     // Dataflash
     DataFlash_Class DataFlash;
+    DataFlash_Class DataFlashfw;
 
     AP_GPS gps;
 
@@ -269,6 +289,11 @@ private:
     NavEKF2 EKF2{&ahrs, rangefinder};
     NavEKF3 EKF3{&ahrs, rangefinder};
     AP_AHRS_NavEKF ahrs{EKF2, EKF3, AP_AHRS_NavEKF::FLAG_ALWAYS_USE_EKF};
+
+    //Controllers for airplane mode
+    AP_RollController rollController{ahrs, aparmfw, DataFlashfw};
+    AP_PitchController pitchController{ahrs, aparmfw, DataFlashfw};
+    AP_YawController yawController{ahrs, aparmfw};
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     SITL::SITL sitl;

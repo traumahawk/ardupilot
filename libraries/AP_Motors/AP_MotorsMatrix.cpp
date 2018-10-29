@@ -78,14 +78,16 @@ void AP_MotorsMatrix::output_to_motors()
     int8_t i;
     int16_t motor_out[AP_MOTORS_MAX_NUM_MOTORS]; // final pwm values sent to the motor
     uint16_t theta;
+    uint16_t throttle;
 
+    throttle = hal.rcin->read(10);
      theta = hal.rcin->read(7);
 /*    DataFlash_Class::instance()->Log_Write("MSG", "TimeUS, Message", "QZ",
                                        AP_HAL::micros64(),
                                        "MotorsMatrix"); */
 
     //read in theta and disable front two motors EXTREMELY EXPERIMENTAL
-    const int CUTOFF_VAL = 1400;
+    const int CUTOFF_VAL = 1750;
     
 
     switch (_spool_mode)
@@ -137,6 +139,10 @@ void AP_MotorsMatrix::output_to_motors()
     {
         motor_out[0] = 1000;
         motor_out[2] = 1000;
+
+        motor_out[1] = throttle;
+        motor_out[3] = throttle;
+
     }
 
     // send output to each motor
