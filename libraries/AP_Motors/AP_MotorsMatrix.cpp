@@ -20,6 +20,7 @@
  */
 #include <AP_HAL/AP_HAL.h>
 #include "AP_MotorsMatrix.h"
+#include <DataFlash/DataFlash.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -35,6 +36,11 @@ void AP_MotorsMatrix::init(motor_frame_class frame_class, motor_frame_type frame
 
     // enable fast channels or instant pwm
     set_update_rate(_speed_hz);
+
+    //enable channels
+        for (uint8_t i = 0; i< 14; i++) {
+        hal.rcout->enable_ch(i);
+        }
 }
 
 // set update rate to motors - a value in hertz
@@ -76,7 +82,6 @@ void AP_MotorsMatrix::output_to_motors()
     uint16_t theta, throttle;
 
     theta = hal.rcin->read(7);
-
     const int CUTOFF_VAL = 1750;
 
     switch (_spool_mode) {
@@ -112,8 +117,10 @@ void AP_MotorsMatrix::output_to_motors()
                 }
             }
             break;
+    }
 
-            if (theta>CUTOFF_VAL)
+
+    if (theta>CUTOFF_VAL)
             {
                  throttle = hal.rcin->read(10);
                  motor_out[0] = 1000;
@@ -121,7 +128,6 @@ void AP_MotorsMatrix::output_to_motors()
                  motor_out[1] = throttle;
                  motor_out[3] = throttle;
             }
-    }
 
     // send output to each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
@@ -168,14 +174,14 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     float   yaw_allowed = 1.0f;         // amount of yaw we can fit in
     float   unused_range;               // amount of yaw we can fit in the current channel
     float   thr_adj;                    // the difference between the pilot's desired throttle and throttle_thrust_best_rpy
-    uint16_t left_aileron, right_aileron, elevator, rudder; //values for control surfaces
+    int left_aileron, right_aileron, elevator; //values for control surfaces
     
     const int scale = 900;  //scaler for max control surface delfection
     const int CENTERPOS = 1400; //Center position for control surface
-    const int S_LEFTAIL = 5;
-    const int S_RIGHTAIL = 6;
-    const int S_ELEVATOR = 7;
-    const int S_RUDDER = 8;
+    const int S_LEFTAIL = 4;
+    const int S_RIGHTAIL = 5;
+    const int S_ELEVATOR = 6;
+    const int S_RUDDER = 7;
 
     // apply voltage and air pressure compensation
     const float compensation_gain = get_compensation_gain();
@@ -185,6 +191,26 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     throttle_thrust = get_throttle() * compensation_gain;
     throttle_avg_max = _throttle_avg_max * compensation_gain;
 
+    //send output to control surfaces
+    left_aileron = CENTERPOS + (int)(roll_thrust*scale);
+    right_aileron = CENTERPOS + (int)(roll_thrust*scale);
+    elevator = CENTERPOS - (int)(pitch_thrust*scale);
+    //rudder = CENTERPOS + (int)(yaw_thrust*scale);
+    // rc_write(S_ELEVATOR, elevator);
+    // rc_write(S_LEFTAIL, left_aileron);
+    // rc_write(S_RIGHTAIL, right_aileron);
+
+    hal.rcout->write(S_ELEVATOR, elevator);
+    hal.rcout->write(S_LEFTAIL, left_aileron);
+    hal.rcout->write(S_RIGHTAIL, right_aileron);
+    //hal.rcout->write(S_RUDDER, rudder);
+
+    DataFlash_Class::instance()->Log_Write("DEBG", "TimeUS, roll_in, pitch_in, aileron, elevator", "QffII",
+                                           AP_HAL::micros64(),
+                                           _roll_in,
+                                           _roll_in,
+                                           left_aileron,
+                                           elevator);
     // sanity check throttle is above zero and below current limited throttle
     if (throttle_thrust <= 0.0f) {
         throttle_thrust = 0.0f;
@@ -307,15 +333,10 @@ void AP_MotorsMatrix::output_armed_stabilizing()
         }
     }
 
-    //send output to control surfaces
-    left_aileron = CENTERPOS + roll_thrust*900;
-    right_aileron = CENTERPOS - roll_thrust*900;
-    elevator = CENTERPOS + pitch_thrust*900;
-    rudder = CENTERPOS + yaw_thrust*900;
 
-    rc_write(S_ELEVATOR, elevator);
-    rc_write(S_LEFTAIL, left_aileron);
-    rc_write(S_RIGHTAIL, right_aileron);
+    //rudder = CENTERPOS + yaw_thrust*scale;
+
+
 }
 
 // output_test_seq - spin a motor at the pwm value specified
