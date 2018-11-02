@@ -148,6 +148,69 @@ const AP_Param::GroupInfo AP_MotorsMulticopter::var_info[] = {
     // @User: Advanced
     AP_GROUPINFO("SAFE_DISARM", 23, AP_MotorsMulticopter, _disarm_disable_pwm, 0),
 
+
+
+ //added control surface params
+
+    // @Param: ROLL_RANGE
+    // @DisplayName: Servo PWM range for Roll from center
+    // @Description: Maximum pwm deflection for ailerons
+    // @Values: 0 - 500
+    // @User: Advanced
+    AP_GROUPINFO("ROLL_RANGE", 25, AP_MotorsMulticopter, _roll_range, ROLL_RANGE_DEFAULT),
+
+    // @Param: PITCH_RANGE
+    // @DisplayName: Servo PWM range for Pitch from center
+    // @Description: Maximum pwm deflection for elevator
+    // @Values: 0 - 500
+    // @User: Advanced
+    AP_GROUPINFO("PITCH_RANGE", 26, AP_MotorsMulticopter, _pitch_range, PITCH_RANGE_DEFAULT),
+
+    // @Param: YAW_RANGE
+    // @DisplayName: Servo PWM range for Yaw from center
+    // @Description: Maximum pwm deflection for rudder
+    // @Values: 0 - 500
+    // @User: Advanced
+    AP_GROUPINFO("YAW_RANGE", 27, AP_MotorsMulticopter, _yaw_range, YAW_RANGE_DEFAULT),
+
+    // @Param: LAIL_TRIM
+    // @DisplayName: Left aileron trim
+    // @Description: Left aileron servo trim
+    // @Values: -500 to 500
+    // @User: Advanced
+    AP_GROUPINFO("LAIL_TRIM", 28, AP_MotorsMulticopter, _laileron_trim, LAILERON_TRIM_DEFAULT),
+
+    // @Param: RAIL_TRIM
+    // @DisplayName: Right aileron trim
+    // @Description: Right aileron servo trim pwm
+    // @Values: -500 to 500
+    // @User: Advanced
+    AP_GROUPINFO("RAIL_TRIM", 29, AP_MotorsMulticopter, _raileron_trim, RAILERON_TRIM_DEFAULT),
+    
+    // @Param: RUD_TRIM
+    // @DisplayName: rudder trim
+    // @Description: rudder servo trim
+    // @Values: -500 to 500
+    // @User: Advanced
+    AP_GROUPINFO("RUD_TRIM", 30, AP_MotorsMulticopter, _rudder_trim, RUDDER_TRIM_DEFAULT),
+
+    // @Param: ELE_TRIM
+    // @DisplayName: elevator trim
+    // @Description: elevator servo trim
+    // @Values: -500 to 500
+    // @User: Advanced
+    AP_GROUPINFO("ELE_TRIM", 31, AP_MotorsMulticopter, _elevator_trim, ELEVATOR_TRIM_DEFAULT),
+
+    // @Param: CUTOFFVAL
+    // @DisplayName: front cutoff pwm
+    // @Description: pwm tilt value that turns off front motors
+    // @Values: 0 - 2000
+    // @User: Advanced
+    AP_GROUPINFO("CUTOFFVAL", 32, AP_MotorsMulticopter, _cutoffval, CUTOFFVAL_DEFAULT),
+
+    //end control surface params
+
+
     // @Param: YAW_SV_ANGLE
     // @DisplayName: Yaw Servo Max Lean Angle
     // @Description: Yaw servo's maximum lean angle

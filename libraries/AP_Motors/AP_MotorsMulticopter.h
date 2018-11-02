@@ -26,6 +26,15 @@
 #define AP_MOTORS_BAT_CURR_TC_DEFAULT   5.0f    // Time constant used to limit the maximum current
 #define AP_MOTORS_BATT_VOLT_FILT_HZ     0.5f    // battery voltage filtered at 0.5hz
 
+#define ROLL_RANGE_DEFAULT 500
+#define PITCH_RANGE_DEFAULT 500
+#define YAW_RANGE_DEFAULT 500
+#define ELEVATOR_TRIM_DEFAULT 0
+#define RUDDER_TRIM_DEFAULT 0
+#define LAILERON_TRIM_DEFAULT 0
+#define RAILERON_TRIM_DEFAULT 0
+#define CUTOFFVAL_DEFAULT 1750
+
 // spool definition
 #define AP_MOTORS_SPOOL_UP_TIME_DEFAULT 0.5f    // time (in seconds) for throttle to increase from zero to min throttle, and min throttle to full throttle.
 
@@ -164,6 +173,16 @@ protected:
     AP_Float            _throttle_hover;        // estimated throttle required to hover throttle in the range 0 ~ 1
     AP_Int8             _throttle_hover_learn;  // enable/disabled hover thrust learning
     AP_Int8             _disarm_disable_pwm;    // disable PWM output while disarmed
+
+    //control surface stuff
+    AP_Int16 _roll_range;
+    AP_Int16 _pitch_range;
+    AP_Int16 _yaw_range;
+    AP_Int8 _laileron_trim;
+    AP_Int8 _raileron_trim;
+    AP_Int8 _rudder_trim;
+    AP_Int8 _elevator_trim;
+    AP_Int16 _cutoffval;
 
     // Maximum lean angle of yaw servo in degrees. This is specific to tricopter
     AP_Float            _yaw_servo_angle_max_deg;
