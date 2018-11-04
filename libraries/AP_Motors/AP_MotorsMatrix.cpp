@@ -190,10 +190,20 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     throttle_avg_max = _throttle_avg_max * compensation_gain;
 
     //send output to control surfaces
+
+    if (hal.rcin->read(12) >= 1500){
     left_aileron = CENTERPOS + _laileron_trim + (int)(_roll_in*_roll_range);
     right_aileron = CENTERPOS + _raileron_trim + (int)(_roll_in*_roll_range);
     elevator = CENTERPOS + _elevator_trim - (int)(_pitch_in*_pitch_range);
     rudder = CENTERPOS + _rudder_trim -  (int)(_yaw_in*_yaw_range);
+    }
+    else{
+        left_aileron = hal.rcin->read(0);
+        elevator = hal.rcin->read(1);
+        rudder = hal.rcin->read(3);
+        right_aileron = hal.rcin->read(5);
+
+    }
     // rc_write(S_ELEVATOR, elevator);
     // rc_write(S_LEFTAIL, left_aileron);
     // rc_write(S_RIGHTAIL, right_aileron);
@@ -203,12 +213,11 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     hal.rcout->write(S_RIGHTAIL, right_aileron);
     hal.rcout->write(S_RUDDER, rudder);
 
-    // DataFlash_Class::instance()->Log_Write("DEBG", "TimeUS, roll_in, pitch_in, aileron, elevator", "QffII",
+    // DataFlash_Class::instance()->Log_Write("DEBG", "TimeUS, roll_in, pitch_in, aileron, elevator", "Qfff",
     //                                        AP_HAL::micros64(),
     //                                        _roll_in,
-    //                                        _roll_in,
-    //                                        left_aileron,
-    //                                        elevator);
+    //                                        _pitch_in,
+    //                                        _yaw_in);
     // sanity check throttle is above zero and below current limited throttle
     if (throttle_thrust <= 0.0f) {
         throttle_thrust = 0.0f;
