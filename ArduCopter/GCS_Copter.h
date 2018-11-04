@@ -20,6 +20,8 @@ public:
         return _chan[ofs];
     };
 
+    void send_airspeed_calibration(const Vector3f &vg);
+
 private:
 
     GCS_MAVLINK_Copter _chan[MAVLINK_COMM_NUM_BUFFERS];

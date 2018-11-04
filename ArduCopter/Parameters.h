@@ -223,10 +223,14 @@ public:
         //
         k_param_imu = 140, // deprecated - can be deleted
         k_param_battery_monitoring = 141,   // deprecated - can be deleted
-        k_param_volt_div_ratio, // deprecated - can be deleted
-        k_param_curr_amp_per_volt,  // deprecated - can be deleted
+        //k_param_volt_div_ratio, // deprecated - can be deleted
+        //k_param_curr_amp_per_volt,  // deprecated - can be deleted
         k_param_input_voltage,  // deprecated - can be deleted
-        k_param_pack_capacity,  // deprecated - can be deleted
+        //k_param_pack_capacity,  // deprecated - can be deleted
+        k_param_airspeed_min,
+        k_param_airspeed_max,
+        k_param_airspeed,  // AP_Airspeed parameters
+
         k_param_compass_enabled,
         k_param_compass,
         k_param_rangefinder_enabled_old, // deprecated

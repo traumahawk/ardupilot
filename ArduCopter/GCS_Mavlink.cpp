@@ -171,6 +171,26 @@ void NOINLINE Copter::send_nav_controller_output(mavlink_channel_t chan)
         flightmode->crosstrack_error() * 1.0e-2f);
 }
 
+float GCS_MAVLINK_Copter::vfr_hud_airspeed() const
+{
+    // airspeed sensors are best.  While the AHRS airspeed_estimate
+    // will use an airspeed sensor, that value is constrained by the
+    // ground speed.  When reporting we should send the true airspeed
+    // value if possible:
+    if (copter.airspeed.enabled() && copter.airspeed.healthy()) {
+        return copter.airspeed.get_airspeed();
+    }
+
+    // airspeed estimates are OK:
+    float aspeed;
+    if (AP::ahrs().airspeed_estimate(&aspeed)) {
+        return aspeed;
+    }
+
+    // lying is worst:
+    return 0;
+}
+
 int16_t GCS_MAVLINK_Copter::vfr_hud_throttle() const
 {
     return (int16_t)(copter.motors->get_throttle() * 100);
@@ -1366,6 +1386,8 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
         Vector3f vel(packet.vx, packet.vy, packet.vz);
         vel *= 0.01f;
 
+        // setup airspeed pressure based on 3D speed, no wind
+        copter.airspeed.setHIL(sq(vel.length()) / 2.0f + 2013);
         gps.setHIL(0, AP_GPS::GPS_OK_FIX_3D,
                    packet.time_usec/1000,
                    loc, vel, 10, 0);
@@ -1530,6 +1552,11 @@ void Copter::gcs_data_stream_send(void)
 void Copter::gcs_update(void)
 {
     gcs().update();
+}
+
+void Copter::gcs_send_airspeed_calibration(const Vector3f &vg)
+{
+    gcs().send_airspeed_calibration(vg);
 }
 
 /*

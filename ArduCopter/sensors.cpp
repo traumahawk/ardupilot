@@ -125,6 +125,44 @@ void Copter::init_optflow()
 #endif      // OPTFLOW == ENABLED
 }
 
+/*
+  ask airspeed sensor for a new value
+ */
+void Copter::read_airspeed(void)
+{
+    if (airspeed.enabled()) {
+        airspeed.read();
+        if (should_log(MASK_LOG_IMU)) {
+           // DataFlash.Log_Write_Airspeed(airspeed);
+            DataFlash_Class::instance()->Log_Write("ASPD", "TimeUS,Smooth_ASPD,ASPD",
+                                                   "snn", // units: seconds, meters
+                                                   "F00", // mult: 1e-6, 1e-2
+                                                   "Qff", // format: uint64_t, float
+                                                   AP_HAL::micros64(),
+                                                   (double)smoothed_airspeed,
+                                                   (double)airspeed.get_raw_airspeed());
+        }
+
+        // supply a new temperature to the barometer from the digital
+        // airspeed sensor if we can
+        float temperature;
+        if (airspeed.get_temperature(temperature)) {
+            barometer.set_external_temperature(temperature);
+        }
+    }
+
+    // we calculate airspeed errors (and thus target_airspeed_cm) even
+    // when airspeed is disabled as TECS may be using synthetic
+    // airspeed for a quadplane transition
+    //calc_airspeed_errors();
+
+    // update smoothed airspeed estimate
+    float aspeed;
+    if (ahrs.airspeed_estimate(&aspeed)) {
+        smoothed_airspeed = smoothed_airspeed * 0.8f + aspeed * 0.2f;
+    }
+}
+
 // called at 200hz
 #if OPTFLOW == ENABLED
 void Copter::update_optical_flow(void)
@@ -227,6 +265,9 @@ void Copter::update_sensor_status_flags(void)
     if (gps.status() > AP_GPS::NO_GPS) {
         control_sensors_present |= MAV_SYS_STATUS_SENSOR_GPS;
     }
+    if (airspeed.enabled()) {
+        control_sensors_present |= MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
+    }
 #if OPTFLOW == ENABLED
     if (optflow.enabled()) {
         control_sensors_present |= MAV_SYS_STATUS_SENSOR_OPTICAL_FLOW;
@@ -313,6 +354,9 @@ void Copter::update_sensor_status_flags(void)
     if (battery.num_instances() > 0) {
         control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_BATTERY;
     }
+    if (airspeed.enabled()) {
+        control_sensors_enabled |= MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
+    }
 #if AC_FENCE == ENABLED
     if (copter.fence.sys_status_enabled()) {
         control_sensors_enabled |= MAV_SYS_STATUS_GEOFENCE;
@@ -339,6 +383,9 @@ void Copter::update_sensor_status_flags(void)
     }
     if (!ap.rc_receiver_present || failsafe.radio) {
         control_sensors_health &= ~MAV_SYS_STATUS_SENSOR_RC_RECEIVER;
+    }
+    if (airspeed.all_healthy()) {
+        control_sensors_health |= MAV_SYS_STATUS_SENSOR_DIFFERENTIAL_PRESSURE;
     }
 #if OPTFLOW == ENABLED
     if (!optflow.healthy()) {

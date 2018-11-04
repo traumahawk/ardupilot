@@ -210,6 +210,12 @@ public:
 private:
     static const AP_FWVersion fwver;
 
+    // Airspeed Sensors
+    AP_Airspeed airspeed;
+
+    // a smoothed airspeed estimate, used for limiting roll angle
+    float smoothed_airspeed;
+
     // key aircraft parameters passed to multiple libraries
     AP_Vehicle::MultiCopter aparm;
 
@@ -877,6 +883,10 @@ private:
     void update_visual_odom();
     void winch_init();
     void winch_update();
+    void read_airspeed(void);
+    void airspeed_ratio_update(void);
+    void gcs_send_airspeed_calibration(const Vector3f &vg);
+    void calc_airspeed_errors();
 
     // setup.cpp
     void report_compass();
