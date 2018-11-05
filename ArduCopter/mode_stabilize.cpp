@@ -67,8 +67,8 @@ if (theta > 1750)
     attitude_control->get_rate_roll_pid().kP(0.18);
     attitude_control->get_rate_pitch_pid().kP(0.18);
 
-    attitude_control->get_rate_roll_pid().kI(0.1);
-    attitude_control->get_rate_pitch_pid().kI(0.1);
+    attitude_control->get_rate_roll_pid().kI(0.05);
+    attitude_control->get_rate_pitch_pid().kI(0.05);
 
     attitude_control->get_rate_roll_pid().kD(0.006);
     attitude_control->get_rate_pitch_pid().kD(0.006);
@@ -76,7 +76,7 @@ if (theta > 1750)
     // attitude_control->get_rate_yaw_pid().kP(5);
     // attitude_control->get_rate_yaw_pid().kD(5);
 
-            DataFlash_Class::instance()->Log_Write("DEBG", "TimeUS, kP, kI, kD", "Qfff",
+            DataFlash_Class::instance()->Log_Write("GSCH", "TimeUS, kP, kI, kD", "Qfff",
                                            AP_HAL::micros64(),
                                             attitude_control->get_rate_roll_pid().kP(),
                                             attitude_control->get_rate_roll_pid().kI(),
@@ -96,7 +96,7 @@ else if (theta <= 1750)
 
     // attitude_control->get_rate_yaw_pid().kP(5);
     // attitude_control->get_rate_yaw_pid().kD(5);
-            DataFlash_Class::instance()->Log_Write("DEBG", "TimeUS, kP, kI, kD", "Qfff",
+            DataFlash_Class::instance()->Log_Write("GSCH", "TimeUS, kP, kI, kD", "Qfff",
                                            AP_HAL::micros64(),
                                             attitude_control->get_rate_roll_pid().kP(),
                                             attitude_control->get_rate_roll_pid().kI(),
