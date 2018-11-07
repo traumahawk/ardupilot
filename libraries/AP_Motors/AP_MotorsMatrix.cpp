@@ -195,7 +195,7 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     left_aileron = CENTERPOS + _laileron_trim + (int)(_roll_in*_roll_range);
     right_aileron = CENTERPOS + _raileron_trim + (int)(_roll_in*_roll_range);
     elevator = CENTERPOS + _elevator_trim - (int)(_pitch_in*_pitch_range);
-    rudder = CENTERPOS + _rudder_trim +  (int)(_pitch_in*0.5*_yaw_range);
+    rudder = CENTERPOS + _rudder_trim +  (int)(_yaw_in*_yaw_range);
     }
     else{
         left_aileron = hal.rcin->read(0);

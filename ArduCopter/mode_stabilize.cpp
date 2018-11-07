@@ -26,6 +26,29 @@ void Copter::ModeStabilize::run()
     float target_yaw_rate;
     float pilot_throttle_scaled;
 
+    int theta = hal.rcin->read(7);
+    int last = hal.rcout->read_last_sent(7);
+
+    const int tconst = 5;
+
+    if (abs(theta - last) > tconst)
+    {
+        if (theta > last)
+        {
+            hal.rcout->write(6, (last+tconst));
+            hal.rcout->write(7, (last+tconst));
+        }
+        else if (theta < last)
+        {
+            hal.rcout->write(6, (last-tconst));
+            hal.rcout->write(7, (last-tconst));
+        }
+    }
+    else{
+        hal.rcout->write(6, theta);
+        hal.rcout->write(7, theta);
+    }
+    
     // if not armed set throttle to zero and exit immediately
     if (!motors->armed() || ap.throttle_zero || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
@@ -46,7 +69,12 @@ void Copter::ModeStabilize::run()
     get_pilot_desired_lean_angles(target_roll, target_pitch, aparm.angle_max, aparm.angle_max);
 
     // get pilot's desired yaw rate
+    if (theta>1750){
+    target_yaw_rate = 0.5*target_roll;
+    }
+    else{
     target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    }
 
     // get pilot's desired throttle
     pilot_throttle_scaled = get_pilot_desired_throttle(channel_throttle->get_control_in());
@@ -61,11 +89,10 @@ void Copter::ModeStabilize::run()
 
     
 //gain scheduling
-int theta = hal.rcin->read(7);
 if (theta > 1750)
 {
     attitude_control->get_rate_roll_pid().kP(0.18);
-    attitude_control->get_rate_pitch_pid().kP(0.18);
+    attitude_control->get_rate_pitch_pid().kP(0.22);
 
     attitude_control->get_rate_roll_pid().kI(0.05);
     attitude_control->get_rate_pitch_pid().kI(0.05);
