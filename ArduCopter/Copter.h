@@ -676,6 +676,7 @@ private:
     void update_super_simple_bearing(bool force_update);
     void read_AHRS(void);
     void update_altitude();
+    void update_flight_mode_plane(void);
 
     // Attitude.cpp
     float get_pilot_desired_yaw_rate(int16_t stick_angle);
@@ -689,6 +690,25 @@ private:
     void set_accel_throttle_I_from_pilot_throttle();
     void rotate_body_frame_to_NE(float &x, float &y);
     uint16_t get_pilot_speed_dn();
+    float get_speed_scaler_plane(void);
+    bool stick_mixing_enabled_plane(void);
+    void stabilize_roll_plane(float speed_scaler);
+    void stabilize_pitch_plane(float speed_scaler);
+    void stick_mix_channel_plane(RC_Channel *channel, int16_t &servo_out);
+    void stabilize_stick_mixing_direct_plane();
+    void stabilize_stick_mixing_fbw_plane();
+    void stabilize_yaw_plane(float speed_scaler);
+    void stabilize_training_plane(float speed_scaler);
+    void stabilize_acro_plane(float speed_scaler);
+    void stabilize_plane();
+    void calc_throttle_plane();
+    void calc_nav_yaw_coordinated_plane(float speed_scaler);
+    void calc_nav_yaw_course_plane(void);
+    void calc_nav_yaw_ground_plane(void);
+    void calc_nav_pitch_plane();
+    void calc_nav_roll_plane();
+    void adjust_nav_pitch_throttle_plane(void);
+    void update_load_factor_plane(void);
 
 #if ADSB_ENABLED == ENABLED
     // avoidance_adsb.cpp
