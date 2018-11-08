@@ -100,7 +100,7 @@ void AP_MotorsMatrix::output_to_motors()
         }
         case SPIN_WHEN_ARMED:
             // sends output to motors when armed but not flying
-            for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+            for (i=0; i<4; i++) {
                 if (motor_enabled[i]) {
                     motor_out[i] = calc_spin_up_to_pwm();
                 }

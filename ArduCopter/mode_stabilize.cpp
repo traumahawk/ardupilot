@@ -25,30 +25,9 @@ void Copter::ModeStabilize::run()
     float target_roll, target_pitch;
     float target_yaw_rate;
     float pilot_throttle_scaled;
-
     int theta = hal.rcin->read(7);
-    int last = hal.rcout->read_last_sent(7);
 
-    const int tconst = 5;
 
-    if (abs(theta - last) > tconst)
-    {
-        if (theta > last)
-        {
-            hal.rcout->write(6, (last+tconst));
-            hal.rcout->write(7, (last+tconst));
-        }
-        else if (theta < last)
-        {
-            hal.rcout->write(6, (last-tconst));
-            hal.rcout->write(7, (last-tconst));
-        }
-    }
-    else{
-        hal.rcout->write(6, theta);
-        hal.rcout->write(7, theta);
-    }
-    
     // if not armed set throttle to zero and exit immediately
     if (!motors->armed() || ap.throttle_zero || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
@@ -86,50 +65,5 @@ void Copter::ModeStabilize::run()
 
     // output pilot's throttle
     attitude_control->set_throttle_out(pilot_throttle_scaled, true, g.throttle_filt);
-
-    
-//gain scheduling
-if (theta > 1750)
-{
-    attitude_control->get_rate_roll_pid().kP(0.18);
-    attitude_control->get_rate_pitch_pid().kP(0.22);
-
-    attitude_control->get_rate_roll_pid().kI(0.05);
-    attitude_control->get_rate_pitch_pid().kI(0.05);
-
-    attitude_control->get_rate_roll_pid().kD(0.006);
-    attitude_control->get_rate_pitch_pid().kD(0.006);
-
-    // attitude_control->get_rate_yaw_pid().kP(5);
-    // attitude_control->get_rate_yaw_pid().kD(5);
-
-            DataFlash_Class::instance()->Log_Write("GSCH", "TimeUS, kP, kI, kD", "Qfff",
-                                           AP_HAL::micros64(),
-                                            attitude_control->get_rate_roll_pid().kP(),
-                                            attitude_control->get_rate_roll_pid().kI(),
-                                            attitude_control->get_rate_roll_pid().kD());
-
-}
-else if (theta <= 1750)
-{
-    attitude_control->get_rate_roll_pid().kP(0.18);
-    attitude_control->get_rate_pitch_pid().kP(0.18);
-
-    attitude_control->get_rate_roll_pid().kI(0.1);
-    attitude_control->get_rate_pitch_pid().kI(0.1);
-
-    attitude_control->get_rate_roll_pid().kD(0.006);
-    attitude_control->get_rate_pitch_pid().kD(0.006);
-
-    // attitude_control->get_rate_yaw_pid().kP(5);
-    // attitude_control->get_rate_yaw_pid().kD(5);
-            DataFlash_Class::instance()->Log_Write("GSCH", "TimeUS, kP, kI, kD", "Qfff",
-                                           AP_HAL::micros64(),
-                                            attitude_control->get_rate_roll_pid().kP(),
-                                            attitude_control->get_rate_roll_pid().kI(),
-                                            attitude_control->get_rate_roll_pid().kD());
-}
-
-
 
 }

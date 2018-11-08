@@ -198,7 +198,68 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #endif
     SCHED_TASK(read_airspeed,          10,    100),
     SCHED_TASK(airspeed_ratio_update,   1,    100),
+    SCHED_TASK(gainScheduling,         50,     50),
+    SCHED_TASK(updateTilt,             50,     50),
 };
+
+void Copter::updateTilt(void)
+{
+    int theta = hal.rcin->read(7);
+    int last = hal.rcout->read_last_sent(7);
+
+    const float tConstUp = -1/(4.0*50);//exponential scheduleRate/TC
+    const float tConstDown = -1/(0.10*50);//seconds
+    float delta = theta-last;
+    float out;
+
+    if (abs(delta) > 50)
+    {
+        if (theta > last)
+        {
+            out = last+delta*(-1*tConstUp-tConstUp*tConstUp/2-tConstUp*tConstUp*tConstUp/6);
+            hal.rcout->write(6, out);
+            hal.rcout->write(7, out);
+        }
+        else if (theta < last)
+        {
+            out = last+delta*(-1*tConstDown-tConstDown*tConstDown/2-tConstDown*tConstDown*tConstDown/6);
+            hal.rcout->write(6, out);
+            hal.rcout->write(7, out);
+        }
+     }
+     else{
+         hal.rcout->write(6, theta);
+         hal.rcout->write(7, theta);
+     }
+}
+
+void Copter::gainScheduling(void)
+{
+    int theta = hal.rcin->read(7);
+    //gain scheduling
+    if (theta > 1750)
+    {
+        attitude_control->get_rate_roll_pid().kP(0.18);
+        attitude_control->get_rate_pitch_pid().kP(0.22);
+
+        attitude_control->get_rate_roll_pid().kI(0.05);
+        attitude_control->get_rate_pitch_pid().kI(0.05);
+
+        attitude_control->get_rate_roll_pid().kD(0.006);
+        attitude_control->get_rate_pitch_pid().kD(0.006);
+    }
+    else if (theta <= 1750)
+    {
+        attitude_control->get_rate_roll_pid().kP(0.18);
+        attitude_control->get_rate_pitch_pid().kP(0.18);
+
+        attitude_control->get_rate_roll_pid().kI(0.1);
+        attitude_control->get_rate_pitch_pid().kI(0.1);
+
+        attitude_control->get_rate_roll_pid().kD(0.006);
+        attitude_control->get_rate_pitch_pid().kD(0.006);
+    }
+}
 
 /*
   once a second update the airspeed calibration ratio
