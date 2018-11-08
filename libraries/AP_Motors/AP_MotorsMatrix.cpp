@@ -100,7 +100,7 @@ void AP_MotorsMatrix::output_to_motors()
         }
         case SPIN_WHEN_ARMED:
             // sends output to motors when armed but not flying
-            for (i=0; i<4; i++) {
+            for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
                 if (motor_enabled[i]) {
                     motor_out[i] = calc_spin_up_to_pwm();
                 }
@@ -112,11 +112,18 @@ void AP_MotorsMatrix::output_to_motors()
             // set motor output based on thrust requests
             for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
                 if (motor_enabled[i]) {
-                    motor_out[i] = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
+                    motor_out[i] = 1100;
                 }
             }
             break;
-    }
+     }
+
+    // if not armed set throttle to zero and exit immediately
+    //if (ap.throttle_zero) {
+    //        for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+    //            motor_out[i] = get_pwm_output_min();
+    //        }
+    //}
 
 
     if (theta>_cutoffval)

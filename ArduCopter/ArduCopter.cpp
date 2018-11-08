@@ -202,35 +202,42 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
     SCHED_TASK(updateTilt,             50,     50),
 };
 
+//calculate pwm output and send command to tilt motors
 void Copter::updateTilt(void)
 {
     int theta = hal.rcin->read(7);
-    int last = hal.rcout->read_last_sent(7);
-
-    const float tConstUp = -1/(4.0*50);//exponential scheduleRate/TC
-    const float tConstDown = -1/(0.10*50);//seconds
+    int last = hal.rcout->read_last_sent(8);
     float delta = theta-last;
-    float out;
+    float tConstUp;//exponential scheduleRate/TC
+    float tConstDown = -1/(0.05*50);
+    int out = last;
 
-    if (abs(delta) > 50)
+    if (theta<1500)
     {
-        if (theta > last)
-        {
-            out = last+delta*(-1*tConstUp-tConstUp*tConstUp/2-tConstUp*tConstUp*tConstUp/6);
-            hal.rcout->write(6, out);
-            hal.rcout->write(7, out);
-        }
-        else if (theta < last)
-        {
-            out = last+delta*(-1*tConstDown-tConstDown*tConstDown/2-tConstDown*tConstDown*tConstDown/6);
-            hal.rcout->write(6, out);
-            hal.rcout->write(7, out);
-        }
-     }
-     else{
-         hal.rcout->write(6, theta);
-         hal.rcout->write(7, theta);
-     }
+        tConstUp = -1/(1.5*50);//Airplane Gain
+    }
+    else
+    {
+        tConstUp = -1/(0.5*50);//Vertical gain
+    }
+    if (theta-10 > last)//solve diffeq
+    {
+        out = last+delta*(-1*tConstUp-tConstUp*tConstUp/2-tConstUp*tConstUp*tConstUp/6);
+    }
+    else if (theta < last-10)//solve diffeq
+    {
+        out = last+delta*(-1*tConstDown-tConstDown*tConstDown/2-tConstDown*tConstDown*tConstDown/6);
+    }
+    if (out<1300)//topside endpoint
+    {
+        out=1300;
+    }
+    else if (out>1700)//bottomside endpoint
+    {
+        out=1700;
+    }
+    SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, out);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, out);
 }
 
 void Copter::gainScheduling(void)
