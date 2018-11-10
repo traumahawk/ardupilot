@@ -20,6 +20,7 @@
  */
 #include <AP_HAL/AP_HAL.h>
 #include "AP_MotorsMatrix.h"
+#include <DataFlash/DataFlash.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -35,6 +36,11 @@ void AP_MotorsMatrix::init(motor_frame_class frame_class, motor_frame_type frame
 
     // enable fast channels or instant pwm
     set_update_rate(_speed_hz);
+
+    //enable channels
+        for (uint8_t i = 0; i< 14; i++) {
+        hal.rcout->enable_ch(i);
+        }
 }
 
 // set update rate to motors - a value in hertz
@@ -73,6 +79,9 @@ void AP_MotorsMatrix::output_to_motors()
 {
     int8_t i;
     int16_t motor_out[AP_MOTORS_MAX_NUM_MOTORS];    // final pwm values sent to the motor
+    uint16_t theta;//, throttle;
+
+    theta = hal.rcin->read(7);
 
     switch (_spool_mode) {
         case SHUT_DOWN: {
@@ -103,11 +112,28 @@ void AP_MotorsMatrix::output_to_motors()
             // set motor output based on thrust requests
             for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
                 if (motor_enabled[i]) {
-                    motor_out[i] = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
+                    motor_out[i] = 1100;
                 }
             }
             break;
-    }
+     }
+
+    // if not armed set throttle to zero and exit immediately
+    //if (ap.throttle_zero) {
+    //        for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
+    //            motor_out[i] = get_pwm_output_min();
+    //        }
+    //}
+
+
+    if (theta>_cutoffval)
+            {
+                 //throttle = hal.rcin->read(10);
+                 motor_out[0] = 1000;
+                 motor_out[2] = 1000;
+                 motor_out[1] = 1000*(1+get_throttle());
+                 motor_out[3] = 1000*(1+get_throttle());
+            }
 
     // send output to each motor
     for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
@@ -115,6 +141,7 @@ void AP_MotorsMatrix::output_to_motors()
             rc_write(i, motor_out[i]);
         }
     }
+
 }
 
 
@@ -153,6 +180,13 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     float   yaw_allowed = 1.0f;         // amount of yaw we can fit in
     float   unused_range;               // amount of yaw we can fit in the current channel
     float   thr_adj;                    // the difference between the pilot's desired throttle and throttle_thrust_best_rpy
+    int left_aileron, right_aileron, elevator, rudder; //values for control surfaces
+    
+    const int CENTERPOS = 1400; //Center position for control surface
+    const int S_LEFTAIL = 4;
+    const int S_RIGHTAIL = 5;
+    const int S_ELEVATOR = 6;
+    const int S_RUDDER = 7;
 
     // apply voltage and air pressure compensation
     const float compensation_gain = get_compensation_gain();
@@ -162,6 +196,35 @@ void AP_MotorsMatrix::output_armed_stabilizing()
     throttle_thrust = get_throttle() * compensation_gain;
     throttle_avg_max = _throttle_avg_max * compensation_gain;
 
+    //send output to control surfaces
+
+    if (hal.rcin->read(12) >= 1500){
+    left_aileron = CENTERPOS + _laileron_trim + (int)(_roll_in*_roll_range);
+    right_aileron = CENTERPOS + _raileron_trim + (int)(_roll_in*_roll_range);
+    elevator = CENTERPOS + _elevator_trim - (int)(_pitch_in*_pitch_range);
+    rudder = CENTERPOS + _rudder_trim +  (int)(_yaw_in*_yaw_range);
+    }
+    else{
+        left_aileron = hal.rcin->read(0);
+        elevator = hal.rcin->read(1);
+        rudder = hal.rcin->read(3);
+        right_aileron = hal.rcin->read(5);
+
+    }
+    // rc_write(S_ELEVATOR, elevator);
+    // rc_write(S_LEFTAIL, left_aileron);
+    // rc_write(S_RIGHTAIL, right_aileron);
+
+    hal.rcout->write(S_ELEVATOR, elevator);
+    hal.rcout->write(S_LEFTAIL, left_aileron);
+    hal.rcout->write(S_RIGHTAIL, right_aileron);
+    hal.rcout->write(S_RUDDER, rudder);
+
+    // DataFlash_Class::instance()->Log_Write("DEBG", "TimeUS, roll_in, pitch_in, aileron, elevator", "Qfff",
+    //                                        AP_HAL::micros64(),
+    //                                        _roll_in,
+    //                                        _pitch_in,
+    //                                        _yaw_in);
     // sanity check throttle is above zero and below current limited throttle
     if (throttle_thrust <= 0.0f) {
         throttle_thrust = 0.0f;
@@ -283,6 +346,11 @@ void AP_MotorsMatrix::output_armed_stabilizing()
             _thrust_rpyt_out[i] = constrain_float(_thrust_rpyt_out[i], 0.0f, 1.0f);
         }
     }
+
+
+    //rudder = CENTERPOS + yaw_thrust*scale;
+
+
 }
 
 // output_test_seq - spin a motor at the pwm value specified

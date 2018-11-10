@@ -199,7 +199,75 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #endif
     SCHED_TASK(read_airspeed,          10,    100),
     SCHED_TASK(airspeed_ratio_update,   1,    100),
+    SCHED_TASK(gainScheduling,         50,     50),
+    SCHED_TASK(updateTilt,             50,     50),
 };
+
+//calculate pwm output and send command to tilt motors
+void Copter::updateTilt(void)
+{
+    int theta = hal.rcin->read(7);
+    int last = hal.rcout->read_last_sent(8);
+    float delta = theta-last;
+    float tConstUp;//exponential scheduleRate/TC
+    float tConstDown = -1/(0.05*50);
+    int out = last;
+
+    if (theta<1500)
+    {
+        tConstUp = -1/(1.5*50);//Airplane Gain
+    }
+    else
+    {
+        tConstUp = -1/(0.5*50);//Vertical gain
+    }
+    if (theta-10 > last)//solve diffeq
+    {
+        out = last+delta*(-1*tConstUp-tConstUp*tConstUp/2-tConstUp*tConstUp*tConstUp/6);
+    }
+    else if (theta < last-10)//solve diffeq
+    {
+        out = last+delta*(-1*tConstDown-tConstDown*tConstDown/2-tConstDown*tConstDown*tConstDown/6);
+    }
+    if (out<1300)//topside endpoint
+    {
+        out=1300;
+    }
+    else if (out>1700)//bottomside endpoint
+    {
+        out=1700;
+    }
+    SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, out);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, out);
+}
+
+void Copter::gainScheduling(void)
+{
+    int theta = hal.rcin->read(7);
+    //gain scheduling
+    if (theta > 1750)
+    {
+        attitude_control->get_rate_roll_pid().kP(0.18);
+        attitude_control->get_rate_pitch_pid().kP(0.22);
+
+        attitude_control->get_rate_roll_pid().kI(0.05);
+        attitude_control->get_rate_pitch_pid().kI(0.05);
+
+        attitude_control->get_rate_roll_pid().kD(0.006);
+        attitude_control->get_rate_pitch_pid().kD(0.006);
+    }
+    else if (theta <= 1750)
+    {
+        attitude_control->get_rate_roll_pid().kP(0.18);
+        attitude_control->get_rate_pitch_pid().kP(0.18);
+
+        attitude_control->get_rate_roll_pid().kI(0.1);
+        attitude_control->get_rate_pitch_pid().kI(0.1);
+
+        attitude_control->get_rate_roll_pid().kD(0.006);
+        attitude_control->get_rate_pitch_pid().kD(0.006);
+    }
+}
 
 /*
   once a second update the airspeed calibration ratio

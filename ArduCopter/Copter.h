@@ -676,7 +676,13 @@ private:
     void update_super_simple_bearing(bool force_update);
     void read_AHRS(void);
     void update_altitude();
+<<<<<<< HEAD
     void update_flight_mode_plane(void);
+=======
+    void airspeed_ratio_update(void);
+    void gainScheduling(void);
+    void updateTilt(void);
+>>>>>>> dev-eddie-2
 
     // Attitude.cpp
     float get_pilot_desired_yaw_rate(int16_t stick_angle);
@@ -904,7 +910,6 @@ private:
     void winch_init();
     void winch_update();
     void read_airspeed(void);
-    void airspeed_ratio_update(void);
     void gcs_send_airspeed_calibration(const Vector3f &vg);
     void calc_airspeed_errors();
 

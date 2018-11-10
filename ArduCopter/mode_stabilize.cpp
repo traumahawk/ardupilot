@@ -25,11 +25,13 @@ void Copter::ModeStabilize::run()
     float target_roll, target_pitch;
     float target_yaw_rate;
     float pilot_throttle_scaled;
+    int theta = hal.rcin->read(7);
+
 
     // if not armed set throttle to zero and exit immediately
-    if (!motors->armed() || ap.throttle_zero || !motors->get_interlock()) {
+    if (!motors->armed() || !motors->get_interlock()) {
         zero_throttle_and_relax_ac();
-        return;
+       return;
     }
 
     // clear landing flag
@@ -46,7 +48,13 @@ void Copter::ModeStabilize::run()
     get_pilot_desired_lean_angles(target_roll, target_pitch, aparm.angle_max, aparm.angle_max);
 
     // get pilot's desired yaw rate
+    if (theta>1750){
+    //target_yaw_rate = 0.5*get_pilot_desired_roll_rate(channel_roll->get_control_in());
+    target_yaw_rate = 3.0*target_roll;
+    }
+    else{
     target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    }
 
     // get pilot's desired throttle
     pilot_throttle_scaled = get_pilot_desired_throttle(channel_throttle->get_control_in());
@@ -58,4 +66,5 @@ void Copter::ModeStabilize::run()
 
     // output pilot's throttle
     attitude_control->set_throttle_out(pilot_throttle_scaled, true, g.throttle_filt);
+
 }

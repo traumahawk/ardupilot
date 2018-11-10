@@ -230,5 +230,5 @@ void Copter::tuning() {
          break;
          }
 #endif
-     }
+     }    
 }
