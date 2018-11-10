@@ -35,8 +35,15 @@ void Copter::ModeAltHold::run()
     float target_roll, target_pitch;
     get_pilot_desired_lean_angles(target_roll, target_pitch, copter.aparm.angle_max, attitude_control->get_althold_lean_angle_max());
 
+    int theta = hal.rcin->read(7);
     // get pilot's desired yaw rate
     float target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    if (theta>1750){
+        target_yaw_rate = 3.0*target_roll;
+    }
+
+    // get pilot's desired yaw rate
+    //float target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
 
     // get pilot desired climb rate
     float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());

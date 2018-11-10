@@ -157,10 +157,11 @@ void Copter::read_airspeed(void)
     //calc_airspeed_errors();
 
     // update smoothed airspeed estimate
-    float aspeed;
-    if (ahrs.airspeed_estimate(&aspeed)) {
-        smoothed_airspeed = smoothed_airspeed * 0.8f + aspeed * 0.2f;
-    }
+    //float aspeed;
+    //if (ahrs.airspeed_estimate(&aspeed)) {
+    //    smoothed_airspeed = smoothed_airspeed * 0.8f + aspeed * 0.2f;
+    //}
+    smoothed_airspeed = smoothed_airspeed * 0.8f + airspeed.get_raw_airspeed() * 0.2f;
 }
 
 // called at 200hz

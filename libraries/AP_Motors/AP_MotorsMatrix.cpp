@@ -79,7 +79,7 @@ void AP_MotorsMatrix::output_to_motors()
 {
     int8_t i;
     int16_t motor_out[AP_MOTORS_MAX_NUM_MOTORS];    // final pwm values sent to the motor
-    uint16_t theta, throttle;
+    uint16_t theta;//, throttle;
 
     theta = hal.rcin->read(7);
 
@@ -128,11 +128,11 @@ void AP_MotorsMatrix::output_to_motors()
 
     if (theta>_cutoffval)
             {
-                 throttle = hal.rcin->read(10);
+                 //throttle = hal.rcin->read(10);
                  motor_out[0] = 1000;
                  motor_out[2] = 1000;
-                 motor_out[1] = throttle;
-                 motor_out[3] = throttle;
+                 motor_out[1] = 1000*(1+get_throttle());
+                 motor_out[3] = 1000*(1+get_throttle());
             }
 
     // send output to each motor

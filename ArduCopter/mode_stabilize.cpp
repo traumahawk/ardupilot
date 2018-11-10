@@ -50,7 +50,7 @@ void Copter::ModeStabilize::run()
     // get pilot's desired yaw rate
     if (theta>1750){
     //target_yaw_rate = 0.5*get_pilot_desired_roll_rate(channel_roll->get_control_in());
-    target_yaw_rate = 5.0*target_roll;
+    target_yaw_rate = 3.0*target_roll;
     }
     else{
     target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
