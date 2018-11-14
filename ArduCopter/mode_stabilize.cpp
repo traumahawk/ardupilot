@@ -48,7 +48,7 @@ void Copter::ModeStabilize::run()
     get_pilot_desired_lean_angles(target_roll, target_pitch, aparm.angle_max, aparm.angle_max);
 
     // get pilot's desired yaw rate
-    if (theta>1750){
+    if (theta>1700){
     //target_yaw_rate = 0.5*get_pilot_desired_roll_rate(channel_roll->get_control_in());
     target_yaw_rate = 3.0*target_roll;
     }

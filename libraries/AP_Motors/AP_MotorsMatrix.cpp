@@ -112,7 +112,7 @@ void AP_MotorsMatrix::output_to_motors()
             // set motor output based on thrust requests
             for (i=0; i<AP_MOTORS_MAX_NUM_MOTORS; i++) {
                 if (motor_enabled[i]) {
-                    motor_out[i] = 1100;
+                    motor_out[i] = calc_thrust_to_pwm(_thrust_rpyt_out[i]);
                 }
             }
             break;
