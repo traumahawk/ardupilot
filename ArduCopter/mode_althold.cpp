@@ -54,11 +54,13 @@ void Copter::ModeAltHold::run()
         target_pitch = Pvp_elev*dV;
     }
 
-    int theta = hal.rcin->read(7);
+    //int theta = hal.rcin->read(7);
     // get pilot's desired yaw rate
     float target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
-    if (theta>1700){
+    if (copter.tilt>1700){
         target_yaw_rate = 3.0*target_roll;
+    } else if (copter.tilt>1500){
+        target_roll = target_roll+3.0*target_yaw_rate;
     }
 
     // get pilot's desired yaw rate
