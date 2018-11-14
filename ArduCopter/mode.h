@@ -68,6 +68,7 @@ public:
         // used to reduce update rate to 100hz:
         uint8_t roi_yaw_counter;
 
+
     };
     static AutoYaw auto_yaw;
 
@@ -268,6 +269,8 @@ protected:
 
     const char *name() const override { return "ALT_HOLD"; }
     const char *name4() const override { return "ALTH"; }
+    int tiltMode;
+    float velDes;
 
 private:
 

@@ -25,7 +25,7 @@ void Copter::ModeStabilize::run()
     float target_roll, target_pitch;
     float target_yaw_rate;
     float pilot_throttle_scaled;
-    int theta = hal.rcin->read(7);
+    //int theta = hal.rcin->read(7);
 
 
     // if not armed set throttle to zero and exit immediately
@@ -47,8 +47,9 @@ void Copter::ModeStabilize::run()
     // convert pilot input to lean angles
     get_pilot_desired_lean_angles(target_roll, target_pitch, aparm.angle_max, aparm.angle_max);
 
+    copter.tilt = hal.rcin->read(7);
     // get pilot's desired yaw rate
-    if (theta>1750){
+    if (copter.tilt>1750){
     //target_yaw_rate = 0.5*get_pilot_desired_roll_rate(channel_roll->get_control_in());
     target_yaw_rate = 3.0*target_roll;
     }

@@ -21,6 +21,7 @@
 #include <AP_HAL/AP_HAL.h>
 #include "AP_MotorsMatrix.h"
 #include <DataFlash/DataFlash.h>
+//#include <ardupilot-Tilty/ArduCopter/Copter.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -79,9 +80,9 @@ void AP_MotorsMatrix::output_to_motors()
 {
     int8_t i;
     int16_t motor_out[AP_MOTORS_MAX_NUM_MOTORS];    // final pwm values sent to the motor
-    uint16_t theta;//, throttle;
+    //uint16_t theta;//, throttle;
 
-    theta = hal.rcin->read(7);
+    //theta = hal.rcout->read_last_sent(8);;
 
     switch (_spool_mode) {
         case SHUT_DOWN: {
@@ -126,7 +127,7 @@ void AP_MotorsMatrix::output_to_motors()
     //}
 
 
-    if (theta>_cutoffval)
+    if (hal.rcout->read_last_sent(8)>_cutoffval)
             {
                  //throttle = hal.rcin->read(10);
                  motor_out[0] = 1000;

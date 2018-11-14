@@ -205,14 +205,15 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 //calculate pwm output and send command to tilt motors
 void Copter::updateTilt(void)
 {
-    int theta = hal.rcin->read(7);
+    //int theta = tilt;
+    //int theta = hal.rcin->read(7);
     int last = hal.rcout->read_last_sent(8);
-    float delta = theta-last;
+    float delta = tilt-last;
     float tConstUp;//exponential scheduleRate/TC
     float tConstDown = -1/(0.05*50);
     int out = last;
 
-    if (theta<1500)
+    if (tilt<1500)
     {
         tConstUp = -1/(1.5*50);//Airplane Gain
     }
@@ -220,21 +221,21 @@ void Copter::updateTilt(void)
     {
         tConstUp = -1/(0.5*50);//Vertical gain
     }
-    if (theta-10 > last)//solve diffeq
+    if (tilt-10 > last)//solve diffeq
     {
         out = last+delta*(-1*tConstUp-tConstUp*tConstUp/2-tConstUp*tConstUp*tConstUp/6);
     }
-    else if (theta < last-10)//solve diffeq
+    else if (tilt < last-10)//solve diffeq
     {
         out = last+delta*(-1*tConstDown-tConstDown*tConstDown/2-tConstDown*tConstDown*tConstDown/6);
     }
-    if (out<1300)//topside endpoint
+    if (out<1300)//vertical endpoint
     {
-        out=1300;
+        out=1000;
     }
-    else if (out>1700)//bottomside endpoint
+    else if (out>1700)//horizontal endpoint
     {
-        out=1700;
+        out=2000;
     }
     SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, out);
     SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, out);
@@ -242,9 +243,9 @@ void Copter::updateTilt(void)
 
 void Copter::gainScheduling(void)
 {
-    int theta = hal.rcin->read(7);
+    //int theta = hal.rcin->read(7);
     //gain scheduling
-    if (theta > 1750)
+    if (tilt > 1750)
     {
         attitude_control->get_rate_roll_pid().kP(0.18);
         attitude_control->get_rate_pitch_pid().kP(0.22);
@@ -255,7 +256,7 @@ void Copter::gainScheduling(void)
         attitude_control->get_rate_roll_pid().kD(0.006);
         attitude_control->get_rate_pitch_pid().kD(0.006);
     }
-    else if (theta <= 1750)
+    else if (tilt <= 1750)
     {
         attitude_control->get_rate_roll_pid().kP(0.18);
         attitude_control->get_rate_pitch_pid().kP(0.18);

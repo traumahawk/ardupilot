@@ -215,6 +215,8 @@ private:
 
     // a smoothed airspeed estimate, used for limiting roll angle
     float smoothed_airspeed;
+    // tilt angle value
+    int tilt;
 
     // key aircraft parameters passed to multiple libraries
     AP_Vehicle::MultiCopter aparm;

@@ -13,7 +13,7 @@ bool Copter::ModeAltHold::init(bool ignore_checks)
         pos_control->set_alt_target_to_current_alt();
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
-
+    tiltMode = 1;
     return true;
 }
 
@@ -22,7 +22,14 @@ bool Copter::ModeAltHold::init(bool ignore_checks)
 void Copter::ModeAltHold::run()
 {
     AltHoldModeState althold_state;
+    //float velDes = 0;
     float takeoff_climb_rate = 0.0f;
+    float accelMax = 5/100;
+    float accelMin = -5/100;
+    float accelCommand = (hal.rcin->read(1)-1000)/1000;
+    float accelDesired = accelMin+(accelMax-accelMin)*accelCommand;
+    velDes = velDes+accelDesired;
+    float dV = velDes-copter.smoothed_airspeed;
 
     // initialize vertical speeds and acceleration
     pos_control->set_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
@@ -34,6 +41,18 @@ void Copter::ModeAltHold::run()
     // get pilot desired lean angles
     float target_roll, target_pitch;
     get_pilot_desired_lean_angles(target_roll, target_pitch, copter.aparm.angle_max, attitude_control->get_althold_lean_angle_max());
+    float Pvp_elev = 1;
+    float Pvp_tilt = 1;
+    if (tiltMode == 2){
+        target_pitch = 0;
+        copter.tilt = copter.tilt+Pvp_tilt*dV;
+    } else if (tiltMode == 3){
+        copter.tilt = 2200;
+        target_pitch = Pvp_elev*dV;
+    }else{
+        copter.tilt = 800;
+        target_pitch = Pvp_elev*dV;
+    }
 
     int theta = hal.rcin->read(7);
     // get pilot's desired yaw rate
