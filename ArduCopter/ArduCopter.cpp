@@ -229,23 +229,23 @@ void Copter::updateTilt(void)
     {
         out = last+delta*(-1*tConstDown-tConstDown*tConstDown/2-tConstDown*tConstDown*tConstDown/6);
     }
-    if (out<1300)//vertical endpoint
+    if (out<900)//topside endpoint
     {
-        out=1000;
+        out=950;
     }
-    else if (out>1700)//horizontal endpoint
+    else if (out > 2100)//bottomside endpoint
     {
-        out=2000;
+        out=2050;
     }
     SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, out);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, out);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, out-50);
 }
 
 void Copter::gainScheduling(void)
 {
     //int theta = hal.rcin->read(7);
     //gain scheduling
-    if (tilt > 1750)
+    if (tilt > 1700)
     {
         attitude_control->get_rate_roll_pid().kP(0.18);
         attitude_control->get_rate_pitch_pid().kP(0.22);
@@ -256,7 +256,7 @@ void Copter::gainScheduling(void)
         attitude_control->get_rate_roll_pid().kD(0.006);
         attitude_control->get_rate_pitch_pid().kD(0.006);
     }
-    else if (tilt <= 1750)
+    else if (tilt <= 1700)
     {
         attitude_control->get_rate_roll_pid().kP(0.18);
         attitude_control->get_rate_pitch_pid().kP(0.18);

@@ -33,7 +33,9 @@
 #define RUDDER_TRIM_DEFAULT 0
 #define LAILERON_TRIM_DEFAULT 0
 #define RAILERON_TRIM_DEFAULT 0
-#define CUTOFFVAL_DEFAULT 1750
+#define CUTOFFVAL_DEFAULT 1700
+
+
 
 // spool definition
 #define AP_MOTORS_SPOOL_UP_TIME_DEFAULT 0.5f    // time (in seconds) for throttle to increase from zero to min throttle, and min throttle to full throttle.
