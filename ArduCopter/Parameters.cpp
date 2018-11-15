@@ -29,6 +29,79 @@
 #define GOBJECTN(v, pname, name, class) { AP_PARAM_GROUP, name, Parameters::k_param_ ## pname, (const void *)&copter.v, {group_info : class::var_info} }
 
 const AP_Param::Info Copter::var_info[] = {
+
+    // @Param: Quadplane
+    // @DisplayName: accel_Max
+    // @Description: Defines max acceleration in alt_hold mode with velocity control
+    // @User: Advanced
+    GSCALAR(accelMax, "accelMax",   ACCELMAX),
+
+    // @Param: Quadplane
+    // @DisplayName: accel_Min
+    // @Description: Defines min acceleration in alt_hold mode with velocity control
+    // @User: Advanced
+    GSCALAR(accelMin, "accelMin",   ACCELMIN),
+
+    // @Param: Quadplane
+    // @DisplayName: Pvp_elev
+    // @Description: P gain for velocity to pitch error on elevator
+    // @User: Advanced
+    GSCALAR(Pvp_elev, "Pvp_elev",   PVP_ELEV),
+
+    // @Param: Quadplane
+    // @DisplayName: Pvp_tilt
+    // @Description: P gain for velocity to pitch error on tilt
+    // @User: Advanced
+    GSCALAR(Pvp_tilt, "Pvp_tilt",   PVP_TILT),
+
+    // @Param: Quadplane
+    // @DisplayName: Pvp_elev_derate
+    // @Description: P gain for velocity to pitch error on elevator derated for low velocity
+    // @User: Advanced
+    GSCALAR(Pvp_elev_derate, "Pvp_elev_derate",   PVP_ELEV_DERATE),
+
+    // @Param: Quadplane
+    // @DisplayName: roll_yaw_mix
+    // @Description: P gain for roll angle to yaw rate
+    // @User: Advanced
+    GSCALAR(roll_yaw_mix, "roll_yaw_mix",   ROLL_YAW_MIX),
+
+    // @Param: Quadplane
+    // @DisplayName: tConstUp
+    // @Description: Time Const from vertical to horizontal
+    // @User: Advanced
+    GSCALAR(tConstUp, "tConstUp",   TCONSTUP),
+
+    // @Param: Quadplane
+    // @DisplayName: tConstDown
+    // @Description: Time Const from horizontal to vertical
+    // @User: Advanced
+    GSCALAR(tConstDown, "tConstDown",   TCONSTDOWN),
+
+    // @Param: Quadplane
+    // @DisplayName: Tilt_Mix
+    // @Description: Tilt angle to start mixing controls
+    // @User: Advanced
+    GSCALAR(Tilt_Mix, "Tilt_Mix",   TILT_MIX),
+
+    // @Param: Quadplane
+    // @DisplayName: TiltTrim
+    // @Description: Tilt angle offset
+    // @User: Advanced
+    GSCALAR(tiltTrim, "tiltTrim",   TILTTRIM),
+
+    // @Param: Quadplane
+    // @DisplayName: TiltEPMax
+    // @Description: Tilt motor maximum endpoint
+    // @User: Advanced
+    GSCALAR(tiltEPMax, "tiltEPMax",   TILTEPMAX),
+
+    // @Param: Quadplane
+    // @DisplayName: TiltEPMin
+    // @Description: Tilt motor minimum endpoint
+    // @User: Advanced
+    GSCALAR(tiltEPMin, "tiltEPMin",   TILTEPMIN),
+
     // @Param: SYSID_SW_MREV
     // @DisplayName: Eeprom format version number
     // @Description: This value is incremented when changes are made to the eeprom format

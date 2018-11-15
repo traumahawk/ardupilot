@@ -39,6 +39,44 @@
 #error CONFIG_HAL_BOARD must be defined to build ArduCopter
 #endif
 
+
+#ifndef ACCELMAX
+ # define ACCELMAX 5.0f
+#endif
+#ifndef ACCELMIN
+ # define ACCELMIN -5.0f
+#endif
+#ifndef PVP_ELEV
+ # define PVP_ELEV 1.0f
+#endif
+#ifndef PVP_TILT
+ # define PVP_TILT 1.0f
+#endif
+#ifndef PVP_ELEV_DERATE
+ # define PVP_ELEV_DERATE 0.4f
+#endif
+#ifndef ROLL_YAW_MIX
+ # define ROLL_YAW_MIX 3.0f
+#endif
+#ifndef TCONSTUP
+ # define TCONSTUP 0.01f
+#endif
+#ifndef TCONSTDOWN
+ # define TCONSTDOWN 0.01f
+#endif
+#ifndef TILT_MAX
+ # define TILT_MIX 1500
+#endif
+#ifndef TILTTRIM
+ # define TILTTRIM -50
+#endif
+#ifndef TILTEPMAX
+ # define TILTEPMAX 2050
+#endif
+#ifndef TILTEPMIN
+ # define TILTEPMIN 950
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 // HIL_MODE                                 OPTIONAL
 
@@ -597,7 +635,7 @@
 #endif
 
 #ifndef AUTO_DISARMING_DELAY
-# define AUTO_DISARMING_DELAY  10
+# define AUTO_DISARMING_DELAY  0
 #endif
 
 //////////////////////////////////////////////////////////////////////////////

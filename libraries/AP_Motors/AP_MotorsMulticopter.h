@@ -47,6 +47,7 @@ public:
     // Constructor
     AP_MotorsMulticopter(uint16_t loop_rate, uint16_t speed_hz = AP_MOTORS_SPEED_DEFAULT);
 
+    AP_Int16 _cutoffval;
     // output - sends commands to the motors
     virtual void        output();
 
@@ -184,7 +185,6 @@ protected:
     AP_Int8 _raileron_trim;
     AP_Int8 _rudder_trim;
     AP_Int8 _elevator_trim;
-    AP_Int16 _cutoffval;
 
     // Maximum lean angle of yaw servo in degrees. This is specific to tricopter
     AP_Float            _yaw_servo_angle_max_deg;

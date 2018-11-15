@@ -13,7 +13,8 @@ bool Copter::ModeAltHold::init(bool ignore_checks)
         pos_control->set_alt_target_to_current_alt();
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
-    tiltMode = 1;
+    tiltMode = 1;//Assume motors in VTOL mode, safe assumption
+    velDes = copter.smoothed_airspeed;//start with no current airspeed delta
     return true;
 }
 
@@ -22,12 +23,13 @@ bool Copter::ModeAltHold::init(bool ignore_checks)
 void Copter::ModeAltHold::run()
 {
     AltHoldModeState althold_state;
-    //float velDes = 0;
     float takeoff_climb_rate = 0.0f;
-    float accelMax = 5/100;
-    float accelMin = -5/100;
+    float accelMaxScaled = g.accelMax/100;//Max acceleration divided by update rate
+    float accelMinScaled = g.accelMin/100;//Min
+
+
     float accelCommand = (hal.rcin->read(1)-1000)/1000;
-    float accelDesired = accelMin+(accelMax-accelMin)*accelCommand;
+    float accelDesired = accelMinScaled+(accelMaxScaled-accelMinScaled)*accelCommand;
     velDes = velDes+accelDesired;
     float dV = velDes-copter.smoothed_airspeed;
 
@@ -41,26 +43,29 @@ void Copter::ModeAltHold::run()
     // get pilot desired lean angles
     float target_roll, target_pitch;
     get_pilot_desired_lean_angles(target_roll, target_pitch, copter.aparm.angle_max, attitude_control->get_althold_lean_angle_max());
-    float Pvp_elev = 1;
-    float Pvp_tilt = 1;
+
     if (tiltMode == 2){
         target_pitch = 0;
-        copter.tilt = copter.tilt+Pvp_tilt*dV;
+        copter.tilt = copter.tilt+g.Pvp_tilt*dV;
+        if (hal.rcout->read_last_sent(8)>1500){
+            target_pitch = g.Pvp_elev_derate*g.Pvp_elev*dV;
+        }
     } else if (tiltMode == 3){
-        copter.tilt = 2200;
-        target_pitch = Pvp_elev*dV;
+        copter.tilt = g.tiltEPMax;
+        target_pitch = g.Pvp_elev*dV;
     }else{
-        copter.tilt = 800;
-        target_pitch = Pvp_elev*dV;
+        copter.tilt = g.tiltEPMin;
+        target_pitch = g.Pvp_elev*dV;
     }
 
-    //int theta = hal.rcin->read(7);
     // get pilot's desired yaw rate
-    float target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    float target_yaw_rate = get_pilot_desired_yaw_rate(channel_roll->get_control_in());
     if (copter.tilt>1700){
-        target_yaw_rate = 3.0*target_roll;
-    } else if (copter.tilt>1500){
-        target_roll = target_roll+3.0*target_yaw_rate;
+        target_yaw_rate = g.roll_yaw_mix*target_roll;
+    } else if (copter.tilt>g.Tilt_Mix){
+        target_roll = target_yaw_rate/g.roll_yaw_mix;
+    } else{
+        target_roll = 0;
     }
 
     // get pilot's desired yaw rate

@@ -74,6 +74,7 @@
  */
 
 #include "Copter.h"
+//#include <AP_Motors/AP_MotorsMulticopter.h>
 
 #define SCHED_TASK(func, rate_hz, max_time_micros) SCHED_TASK_CLASS(Copter, &copter, func, rate_hz, max_time_micros)
 
@@ -198,7 +199,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #endif
     SCHED_TASK(read_airspeed,          10,    100),
     SCHED_TASK(airspeed_ratio_update,   1,    100),
-    SCHED_TASK(gainScheduling,         50,     50),
+    SCHED_TASK(gainScheduling,         10,     50),
     SCHED_TASK(updateTilt,             50,     50),
 };
 
@@ -209,42 +210,35 @@ void Copter::updateTilt(void)
     //int theta = hal.rcin->read(7);
     int last = hal.rcout->read_last_sent(8);
     float delta = tilt-last;
-    float tConstUp;//exponential scheduleRate/TC
-    float tConstDown = -1/(0.05*50);
+    float tConstUp = -1/(g.tConstUp*50);//exponential scheduleRate/TC
+    float tConstDown = -1/(g.tConstDown*50);
     int out = last;
 
-    if (tilt<1500)
-    {
-        tConstUp = -1/(1.5*50);//Airplane Gain
-    }
-    else
-    {
-        tConstUp = -1/(0.5*50);//Vertical gain
-    }
-    if (tilt-10 > last)//solve diffeq
+    if (tilt-5 > last)//solve diffeq
     {
         out = last+delta*(-1*tConstUp-tConstUp*tConstUp/2-tConstUp*tConstUp*tConstUp/6);
     }
-    else if (tilt < last-10)//solve diffeq
+    else if (tilt < last-5)//solve diffeq
     {
         out = last+delta*(-1*tConstDown-tConstDown*tConstDown/2-tConstDown*tConstDown*tConstDown/6);
     }
-    if (out<900)//topside endpoint
+    if (out<g.tiltEPMin)//topside endpoint
     {
-        out=950;
+        out=g.tiltEPMin;
     }
-    else if (out > 2100)//bottomside endpoint
+    else if (out > g.tiltEPMax)//bottomside endpoint
     {
-        out=2050;
+        out=g.tiltEPMax;
     }
     SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, out);
-    SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, out-50);
+    SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, out+g.tiltTrim);
 }
 
 void Copter::gainScheduling(void)
 {
     //int theta = hal.rcin->read(7);
     //gain scheduling
+    //int hello = _cutoffval;
     if (tilt > 1700)
     {
         attitude_control->get_rate_roll_pid().kP(0.18);

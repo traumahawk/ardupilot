@@ -154,8 +154,21 @@ public:
         k_param_single_servo_4,         // 78 - remove
 
         //
-        // 80: Heli
+        // 80: Quadplane Jank
         //
+        k_param_accelMax = 80,//Max acceleration divided by update rate
+        k_param_accelMin,//Min
+        k_param_Pvp_elev,//P gain on elevator for velocity delta
+        k_param_Pvp_tilt,//P gain on tilt angle for velocity delta
+        k_param_Pvp_elev_derate,//Additional gain for pitch at high tilted speeds
+        k_param_roll_yaw_mix,
+        k_param_tConstUp,//TC inbound
+        k_param_tConstDown,//TC outbound
+        k_param_Tilt_Mix,//Tilt angle to start mixing controls
+        k_param_tiltTrim,//Differential for left and right motors
+
+
+        /*
         k_param_heli_servo_1 = 80,  // remove
         k_param_heli_servo_2,       // remove
         k_param_heli_servo_3,       // remove
@@ -166,7 +179,7 @@ public:
         k_param_heli_stab_col_min,  // remove
         k_param_heli_stab_col_max,  // remove
         k_param_heli_servo_rsc,     // 89 = full! - remove
-
+        */
         //
         // 90: misc2
         //
@@ -180,6 +193,8 @@ public:
 
         // 97: RSSI
         k_param_rssi = 97,
+        k_param_tiltEPMax,//Max endpoint for tilt servos
+        k_param_tiltEPMin,//Min
                 
         //
         // 100: Inertial Nav
@@ -371,6 +386,19 @@ public:
     };
 
     AP_Int16        format_version;
+
+    AP_Float        accelMax;//Max acceleration divided by update rate
+    AP_Float        accelMin;//Min
+    AP_Float        Pvp_elev;//P gain on elevator for velocity delta
+    AP_Float        Pvp_tilt;//P gain on tilt angle for velocity delta
+    AP_Float        Pvp_elev_derate;//Additional gain for pitch at high tilted speeds
+    AP_Float        roll_yaw_mix;
+    AP_Float        tConstUp;//TC inbound
+    AP_Float        tConstDown;//TC outbound
+    AP_Int32        Tilt_Mix;//Tilt angle to start mixing controls
+    AP_Int32        tiltTrim;//Differential for left and right motors
+    AP_Int32        tiltEPMax;//Max endpoint for tilt servos
+    AP_Int32        tiltEPMin;//Min
 
     // Telemetry control
     //
