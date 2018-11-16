@@ -13,8 +13,9 @@ bool Copter::ModeAltHold::init(bool ignore_checks)
         pos_control->set_alt_target_to_current_alt();
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
-    tiltMode = 1;//Assume motors in VTOL mode, safe assumption
-    velDes = copter.smoothed_airspeed;//start with no current airspeed delta
+
+    tiltMode = 1;
+    velDes = 0;
     return true;
 }
 
@@ -24,14 +25,8 @@ void Copter::ModeAltHold::run()
 {
     AltHoldModeState althold_state;
     float takeoff_climb_rate = 0.0f;
-    float accelMaxScaled = g.accelMax/100;//Max acceleration divided by update rate
-    float accelMinScaled = g.accelMin/100;//Min
-
-
-    float accelCommand = (hal.rcin->read(1)-1000)/1000;
-    float accelDesired = accelMinScaled+(accelMaxScaled-accelMinScaled)*accelCommand;
-    velDes = velDes+accelDesired;
-    float dV = velDes-copter.smoothed_airspeed;
+    //float accelMaxScaled = g.accelMax/100;//Max acceleration divided by update rate
+    //float accelMinScaled = g.accelMin/100;//Min
 
     // initialize vertical speeds and acceleration
     pos_control->set_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
@@ -44,10 +39,21 @@ void Copter::ModeAltHold::run()
     float target_roll, target_pitch;
     get_pilot_desired_lean_angles(target_roll, target_pitch, copter.aparm.angle_max, attitude_control->get_althold_lean_angle_max());
 
+    velDes = velDes + g.accelMax*target_pitch/40000;
+
+    if (velDes>100){
+        velDes = 100;
+    }else if (velDes<-10){
+        velDes = -10;
+    }
+
+    float dV = velDes-copter.smoothed_airspeed;
+
+
     if (tiltMode == 2){
         target_pitch = 0;
         copter.tilt = copter.tilt+g.Pvp_tilt*dV;
-        if (hal.rcout->read_last_sent(8)>1500){
+        if (hal.rcout->read_last_sent(8)>g.Tilt_Mix){
             target_pitch = g.Pvp_elev_derate*g.Pvp_elev*dV;
         }
     } else if (tiltMode == 3){

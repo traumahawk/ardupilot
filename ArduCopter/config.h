@@ -41,16 +41,16 @@
 
 
 #ifndef ACCELMAX
- # define ACCELMAX 5.0f
+ # define ACCELMAX -0.1f
 #endif
 #ifndef ACCELMIN
  # define ACCELMIN -5.0f
 #endif
 #ifndef PVP_ELEV
- # define PVP_ELEV 1.0f
+ # define PVP_ELEV -1.0f
 #endif
 #ifndef PVP_TILT
- # define PVP_TILT 1.0f
+ # define PVP_TILT -1.0f
 #endif
 #ifndef PVP_ELEV_DERATE
  # define PVP_ELEV_DERATE 0.4f
