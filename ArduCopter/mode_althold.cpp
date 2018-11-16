@@ -14,8 +14,19 @@ bool Copter::ModeAltHold::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
-    tiltMode = 1;
-    velDes = 0;
+    if (copter.tilt <= g.tiltEPMin + 20)
+    {
+        tiltMode = 1;
+    }
+    else if (copter.tilt < 1700)
+    {
+        tiltMode = 2;
+    }
+    else
+    {
+        tiltMode = 3;
+    }
+    velDes = copter.smoothed_airspeed;
     return true;
 }
 
@@ -52,16 +63,50 @@ void Copter::ModeAltHold::run()
 
     if (tiltMode == 2){
         target_pitch = 0;
+
         copter.tilt = copter.tilt+g.Pvp_tilt*dV;
-        if (hal.rcout->read_last_sent(8)>g.Tilt_Mix){
+        if (copter.tilt > 1700)
+        {
+            tiltMode = 3;
+        }
+        else if (copter.tilt <= g.tiltEPMin + 20)
+        {
+            tiltMode = 1;
+        }
+        else
+        {
+            if (hal.rcout->read_last_sent(8)>g.Tilt_Mix){
             target_pitch = g.Pvp_elev_derate*g.Pvp_elev*dV;
         }
+    }
+
     } else if (tiltMode == 3){
+
+        //see if we need to change modes
+        if(copter.smoothed_airspeed <= 20)
+        {
+            tiltMode = 2;
+        }
+        else
+        {
         copter.tilt = g.tiltEPMax;
         target_pitch = g.Pvp_elev*dV;
-    }else{
+        }
+
+
+    }else{  //tilt mode 1
         copter.tilt = g.tiltEPMin;
+        
+        //see if we need to switch modes
+        if (g.Pvp_elev*dV > 200)
+        {
+            tiltMode = 2;
+        }
+        else
+        {
         target_pitch = g.Pvp_elev*dV;
+        }
+
     }
 
     // get pilot's desired yaw rate
