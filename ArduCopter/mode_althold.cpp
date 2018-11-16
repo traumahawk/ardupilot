@@ -14,8 +14,21 @@ bool Copter::ModeAltHold::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
-    tiltMode = 1;
+    tiltMode = 2;
     velDes = 0;
+    logIndex = 0;
+    tiltTemp=copter.tilt;
+    DataFlash_Class::instance()->Log_Write("Quad", "TimeUS,velDes,dV,tilt,pitch,test,tiltTemp",
+                                           "snnnnnn", // units: seconds, meters
+                                           "F000000", // mult: 1e-6, 1e-2
+                                           "Qffffff", // format: uint64_t, float
+                                           AP_HAL::micros64(),
+                                           (double)velDes,
+                                           (double)0.0,
+                                           (double)copter.tilt,
+                                           (double)0.0/100,
+                                           (double)0.0,
+                                           (double)0.0);
     return true;
 }
 
@@ -49,12 +62,17 @@ void Copter::ModeAltHold::run()
 
     float dV = velDes-copter.smoothed_airspeed;
 
-
     if (tiltMode == 2){
         target_pitch = 0;
-        copter.tilt = copter.tilt+g.Pvp_tilt*dV;
+        tiltTemp=tiltTemp+g.Pvp_tilt*dV/400;
+        copter.tilt = (int)tiltTemp;
         if (hal.rcout->read_last_sent(8)>g.Tilt_Mix){
             target_pitch = g.Pvp_elev_derate*g.Pvp_elev*dV;
+        }
+        if(copter.tilt>g.tiltEPMax){
+            copter.tilt=g.tiltEPMax;
+        }else if(copter.tilt<g.tiltEPMin){
+            copter.tilt=g.tiltEPMin;
         }
     } else if (tiltMode == 3){
         copter.tilt = g.tiltEPMax;
@@ -91,6 +109,8 @@ void Copter::ModeAltHold::run()
     } else {
         althold_state = AltHold_Flying;
     }
+
+    althold_state = AltHold_Flying;
 
     // Alt Hold State Machine
     switch (althold_state) {
@@ -193,5 +213,20 @@ void Copter::ModeAltHold::run()
         pos_control->set_alt_target_from_climb_rate_ff(target_climb_rate, G_Dt, false);
         pos_control->update_z_controller();
         break;
+    }
+    logIndex++;
+    if (logIndex==60){
+        DataFlash_Class::instance()->Log_Write("Quad", "TimeUS,velDes,dV,tilt,pitch,test,tiltTemp",
+                                               "snnnnnn", // units: seconds, meters
+                                               "F000000", // mult: 1e-6, 1e-2
+                                               "Qffffff", // format: uint64_t, float
+                                               AP_HAL::micros64(),
+                                               (double)velDes,
+                                               (double)dV,
+                                               (double)copter.tilt,
+                                               (double)target_pitch/100,
+                                               (double)100.0,
+                                               (double)tiltTemp);
+        logIndex = 0;
     }
 }

@@ -271,6 +271,8 @@ protected:
     const char *name4() const override { return "ALTH"; }
     int tiltMode;
     float velDes;
+    int logIndex;
+    float tiltTemp;
 
 private:
 
