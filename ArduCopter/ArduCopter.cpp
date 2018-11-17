@@ -209,19 +209,36 @@ void Copter::updateTilt(void)
     //int theta = tilt;
     //int theta = hal.rcin->read(7);
     int last = hal.rcout->read_last_sent(8);
-    float delta = tilt-last;
-    float tConstUp = -1/(g.tConstUp*50);//exponential scheduleRate/TC
-    float tConstDown = -1/(g.tConstDown*50);
+    int delta = tilt-last;
     int out = last;
 
-    if (tilt-5 > last)//solve diffeq
+if (abs(delta)<30)
+{
+    out = tilt;
+}
+else
+{
+     if (delta > 0 )
     {
-        out = last+delta*(-1*tConstUp-tConstUp*tConstUp/2-tConstUp*tConstUp*tConstUp/6);
+        
+        float mid_comp = (((float)last - 1500.0)/500.0)*(((float)last - 1500.0)/500.0) + 0.33;
+        float compute = (20*mid_comp)/((float)g.tConstUp);
+        out = last + (int)compute;
+                    DataFlash_Class::instance()->Log_Write("TLT", "TimeUS, last, tilt, compute, out, delta",
+                                               "QIIfIf", // format: uint64_t, float
+                                               AP_HAL::micros64(),
+                                                last,
+                                                tilt,
+                                                compute,
+                                                out, 
+                                                delta);
     }
-    else if (tilt < last-5)//solve diffeq
+    else if (delta < 0)
     {
-        out = last+delta*(-1*tConstDown-tConstDown*tConstDown/2-tConstDown*tConstDown*tConstDown/6);
+        out = last - 20/(g.tConstDown);
     }
+}
+
     if (out<g.tiltEPMin)//topside endpoint
     {
         out=g.tiltEPMin;
@@ -232,6 +249,8 @@ void Copter::updateTilt(void)
     }
     SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, out);
     SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, out+g.tiltTrim);
+
+
 }
 
 void Copter::gainScheduling(void)
@@ -239,18 +258,18 @@ void Copter::gainScheduling(void)
     //int theta = hal.rcin->read(7);
     //gain scheduling
     //int hello = _cutoffval;
-    if (tilt > 1700)
+    if (tilt > 1850)  //hard coded cutoffval airplane
     {
         attitude_control->get_rate_roll_pid().kP(0.18);
-        attitude_control->get_rate_pitch_pid().kP(0.22);
+        attitude_control->get_rate_pitch_pid().kP(0.26);
 
         attitude_control->get_rate_roll_pid().kI(0.05);
-        attitude_control->get_rate_pitch_pid().kI(0.05);
+        attitude_control->get_rate_pitch_pid().kI(0.1);
 
         attitude_control->get_rate_roll_pid().kD(0.006);
         attitude_control->get_rate_pitch_pid().kD(0.006);
     }
-    else if (tilt <= 1700)
+    else if (tilt <= 1850) //hard coded cutoffval quad
     {
         attitude_control->get_rate_roll_pid().kP(0.18);
         attitude_control->get_rate_pitch_pid().kP(0.18);

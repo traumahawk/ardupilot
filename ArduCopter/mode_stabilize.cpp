@@ -50,7 +50,7 @@ void Copter::ModeStabilize::run()
     copter.tilt = hal.rcin->read(7);
     // get pilot's desired yaw rate
 
-    if (copter.tilt>1700){
+    if (copter.tilt>1850){    //hard coded cutoff limit
     //target_yaw_rate = 0.5*get_pilot_desired_roll_rate(channel_roll->get_control_in());
     target_yaw_rate = g.roll_yaw_mix*target_roll;
     }
