@@ -14,32 +14,7 @@ bool Copter::ModeAltHold::init(bool ignore_checks)
         pos_control->set_desired_velocity_z(inertial_nav.get_velocity_z());
     }
 
-    if(copter.tilt<g.tiltEPMin+20)
-    {
-        tiltMode = 1;
-    }
-    else if (copter.tilt < 1850-20)//hard coded cutoff val
-    {
-        tiltMode = 2;
-    }
-    else
-    {
-        tiltMode = 3;
-    }
-    velDes = copter.smoothed_airspeed;
     logIndex = 0;
-    tiltTemp=copter.tilt;
-    DataFlash_Class::instance()->Log_Write("Quad", "TimeUS,velDes,dV,tilt,pitch,test,tiltTemp",
-                                           "snnnnnn", // units: seconds, meters
-                                           "F000000", // mult: 1e-6, 1e-2
-                                           "Qffffff", // format: uint64_t, float
-                                           AP_HAL::micros64(),
-                                           (double)velDes,
-                                           (double)0.0,
-                                           (double)copter.tilt,
-                                           (double)0.0/100,
-                                           (double)0.0,
-                                           (double)0.0);
     return true;
 }
 
@@ -49,8 +24,6 @@ void Copter::ModeAltHold::run()
 {
     AltHoldModeState althold_state;
     float takeoff_climb_rate = 0.0f;
-    //float accelMaxScaled = g.accelMax/100;//Max acceleration divided by update rate
-    //float accelMinScaled = g.accelMin/100;//Min
 
     // initialize vertical speeds and acceleration
     pos_control->set_speed_z(-get_pilot_speed_dn(), g.pilot_speed_up);
@@ -63,96 +36,35 @@ void Copter::ModeAltHold::run()
     float target_roll, target_pitch;
     get_pilot_desired_lean_angles(target_roll, target_pitch, copter.aparm.angle_max, attitude_control->get_althold_lean_angle_max());
 
-    velDes = velDes + g.accelMax*target_pitch/40000;
-    float dV = velDes-copter.smoothed_airspeed;
+    //should be parameters
+    int tlty_althld_cut1 = 1300;
+    int tlty_althld_cut2 = 1600;
+    int tlty_m1_pit_up = 2000;
+    int tlty_m1_pit_dn = -500;
+    float tlty_Vstall = 15;
+    float tlty_Vmax = 25;
 
-    if (target_pitch*dV > 0)
-    {
-        velDes = copter.smoothed_airspeed;
-        tiltTemp = copter.tilt;
-        dV = velDes-copter.smoothed_airspeed;
-    }
-    
-    logIndex++;
-    if (logIndex==60)
-    {
-        DataFlash_Class::instance()->Log_Write("Quad", "TimeUS,velDes,dV,tilt,pitch,test,tiltTemp",
-                                               "QfIffIf", // format: uint64_t, float
-                                               AP_HAL::micros64(),
-                                               velDes,
-                                               dV,
-                                               copter.tilt,
-                                               target_pitch/100,
-                                               100.0,
-                                               tiltTemp);
-        logIndex = 0;
-    }
+    //added for alt hold only
+    int in = hal.rcin->read(10);
+    float tlty_Vdes = 0;
+    float tlty_dV = 0;
 
-    if (velDes > 100)
-    {
-        velDes = 100;
-    }
-    else if (velDes < -10)
-    {
-        velDes = -10;
-    }
-
-    if (tiltMode == 2)
-    {
+    tlty_Vdes = ((tlty_Vmax-1.1*tlty_Vstall)/(2000-tlty_althld_cut2))*(in-tlty_althld_cut2)+1.1*tlty_Vstall;
+    tlty_dV = tlty_Vdes-copter.smoothed_airspeed;
+    if(hal.rcout->read_last_sent(8)>g.tiltEPMax-50){
+        target_pitch = g.Pvp_elev*tlty_dV*100;
+    }else if (hal.rcout->read_last_sent(8)>g.Tilt_Mix){
+        target_pitch = g.Pvp_elev_derate*g.Pvp_elev*tlty_dV*100;
+    }else{
         target_pitch = 0;
-        tiltTemp = g.tiltEPMin + velDes * 100 + g.Pvp_tilt * dV / 400;
-
-        if (tiltTemp >= 1850 - 20) //too much tilt go into airplane
-        {
-            tiltMode = 3;
-        }
-        else if (tiltTemp <= g.tiltEPMin + 20) //too less tilt go into quad
-        {
-            tiltMode = 1;
-        }
-        else
-        {
-            if (tiltTemp > g.tiltEPMax)
-            {
-                tiltTemp = g.tiltEPMax;
-            }
-            else if (tiltTemp < g.tiltEPMin)
-            {
-                tiltTemp = g.tiltEPMin;
-            }
-            copter.tilt = (int)tiltTemp;
-            if (hal.rcout->read_last_sent(8) > g.Tilt_Mix)
-            {
-                target_pitch = g.Pvp_elev_derate * g.Pvp_elev * dV;
-            }
-        }
     }
-
-    else if (tiltMode == 3)
-    {
-
-        if (copter.smoothed_airspeed < 20)
-        {
-            tiltMode = 2;
-        }
-        else
-        {
-            copter.tilt = g.tiltEPMax;
-            target_pitch = g.Pvp_elev * dV;
-        }
-    }
-    else //mode 1
-    {
-
-        if (g.Pvp_elev * dV < -200)
-        {
-            tiltMode = 2;
-        }
-        else
-        {
-            copter.tilt = g.tiltEPMin;
-            target_pitch = g.Pvp_elev * dV;
-        }
+    if (in < tlty_althld_cut1){
+        target_pitch = -1*((tlty_m1_pit_up-tlty_m1_pit_dn)/(tlty_althld_cut1-1000))*(in-1000)+tlty_m1_pit_up;
+        copter.tilt = g.tiltEPMin;
+    } else if (in > tlty_althld_cut1 && in < tlty_althld_cut2){
+        copter.tilt = ((g.tiltEPMax-g.tiltEPMin)/(tlty_althld_cut2-tlty_althld_cut1))*(in-tlty_althld_cut1)+g.tiltEPMin;
+    } else if (in > tlty_althld_cut2){
+        copter.tilt = g.tiltEPMax;
     }
 
     // get pilot's desired yaw rate
@@ -170,11 +82,22 @@ void Copter::ModeAltHold::run()
         target_roll = 0;
     }
 
-    // get pilot's desired yaw rate
-    //float target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
+    logIndex++;
+    if (logIndex==60)
+    {
+        DataFlash_Class::instance()->Log_Write("Quad", "TimeUS,Vdes,dV,tilt,pitch,test",
+                                               "QffIfI", // format: uint64_t, float
+                                               AP_HAL::micros64(),
+                                               (double)tlty_Vdes,
+                                               (double)tlty_dV,
+                                               copter.tilt,
+                                               (double)target_pitch/100,
+                                               100);
+        logIndex = 0;
+    }
 
     // get pilot desired climb rate
-    float target_climb_rate = get_pilot_desired_climb_rate(channel_throttle->get_control_in());
+    float target_climb_rate = get_pilot_desired_climb_rate(channel_pitch->get_control_in());
     target_climb_rate = constrain_float(target_climb_rate, -get_pilot_speed_dn(), g.pilot_speed_up);
 
     // Alt Hold State Machine Determination

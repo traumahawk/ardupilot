@@ -197,7 +197,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 #if OSD_ENABLED == ENABLED
     SCHED_TASK(publish_osd_info, 1, 10),
 #endif
-    SCHED_TASK(read_airspeed,          10,    100),
+    SCHED_TASK(read_airspeed,          50,    100),
     SCHED_TASK(airspeed_ratio_update,   1,    100),
     SCHED_TASK(gainScheduling,         10,     50),
     SCHED_TASK(updateTilt,             50,     50),
@@ -206,19 +206,11 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
 //calculate pwm output and send command to tilt motors
 void Copter::updateTilt(void)
 {
-    //int theta = tilt;
-    //int theta = hal.rcin->read(7);
     int last = hal.rcout->read_last_sent(8);
     int delta = tilt-last;
     int out = last;
 
-if (abs(delta)<30)
-{
-    out = tilt;
-}
-else
-{
-     if (delta > 0 )
+    if (delta > 0 )
     {
         
         float mid_comp = (((float)last - 1500.0)/500.0)*(((float)last - 1500.0)/500.0) + 0.33;
@@ -229,23 +221,22 @@ else
                                                AP_HAL::micros64(),
                                                 last,
                                                 tilt,
-                                                compute,
+                                                (double)compute,
                                                 out, 
-                                                delta);
+                                                (double)delta);
     }
     else if (delta < 0)
     {
         out = last - 20/(g.tConstDown);
     }
-}
 
-    if (out<g.tiltEPMin)//topside endpoint
+    if (out < g.tiltEPMin)//topside endpoint
     {
-        out=g.tiltEPMin;
+        out = g.tiltEPMin;
     }
     else if (out > g.tiltEPMax)//bottomside endpoint
     {
-        out=g.tiltEPMax;
+        out = g.tiltEPMax;
     }
     SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorLeft, out);
     SRV_Channels::set_output_pwm(SRV_Channel::k_tiltMotorRight, out+g.tiltTrim);

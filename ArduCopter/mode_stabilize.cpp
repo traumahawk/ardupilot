@@ -1,4 +1,5 @@
 #include "Copter.h"
+#include <cmath>
 
 /*
  * Init and run calls for stabilize flight mode
@@ -51,8 +52,8 @@ void Copter::ModeStabilize::run()
     // get pilot's desired yaw rate
 
     if (copter.tilt>1850){    //hard coded cutoff limit
-    //target_yaw_rate = 0.5*get_pilot_desired_roll_rate(channel_roll->get_control_in());
     target_yaw_rate = g.roll_yaw_mix*target_roll;
+    target_pitch = target_pitch-0.1*abs(target_roll);
     }
     else{
     target_yaw_rate = get_pilot_desired_yaw_rate(channel_yaw->get_control_in());
